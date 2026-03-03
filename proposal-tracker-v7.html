@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Proposal Input Tracker — v7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg:#f3f0eb; --bg-warm:#eae6de; --surface:#fdfcf9; --surface-warm:#f8f5f0;
+  --border:#dedad2; --border-strong:#c5bfb4;
+  --text:#1a1713; --text-secondary:#5e5850; --text-muted:#9b9188;
+  --accent:#2d5a3d; --accent-light:#e3ede7; --accent-mid:#3f6e52; --accent-dim:#c8ddd0;
+  --warn:#7a4010; --warn-light:#fdf0e3; --warn-border:#e8c49a;
+  --danger:#7a1a1a; --danger-light:#fdf0f0; --danger-border:#e8b4b4;
+  --gold:#b5883a; --gold-light:#fdf6e3; --gold-border:#e8d49a;
+  --cc-blue-bg:#e8edf5;   --cc-blue-text:#1e3a6e;   --cc-blue-border:#a8bee0;
+  --cc-violet-bg:#ede8f5; --cc-violet-text:#3e1e6e;  --cc-violet-border:#baa8e0;
+  --cc-amber-bg:#f5ede3;  --cc-amber-text:#7a4a10;   --cc-amber-border:#dfc09a;
+  --cc-teal-bg:#e3f2f5;   --cc-teal-text:#1a5a68;    --cc-teal-border:#9ecfd8;
+  --cc-rose-bg:#f5e8ef;   --cc-rose-text:#6e1a4a;    --cc-rose-border:#d8a0be;
+  --cc-sand-bg:#edeae3;   --cc-sand-text:#46402e;    --cc-sand-border:#bdb89e;
+  --r-sm:4px; --r-md:9px; --r-lg:14px; --r-xl:20px; --r-pill:999px;
+  --shadow-sm:0 1px 4px rgba(26,23,19,.07),0 1px 2px rgba(26,23,19,.04);
+  --shadow-md:0 4px 20px rgba(26,23,19,.09),0 2px 6px rgba(26,23,19,.05);
+  --shadow-lg:0 16px 48px rgba(26,23,19,.13),0 4px 14px rgba(26,23,19,.07);
+}
+
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.65;min-height:100vh;-webkit-font-smoothing:antialiased}
+.view{display:none}.view.active{display:block}
+
+/* ── NAV ── */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 36px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.nav-logo{font-family:'Lora',serif;font-size:15px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;font-style:italic;min-width:0;flex-shrink:1}
+.nav-logo-name{font-style:normal;font-weight:600;white-space:nowrap}
+.nav-logo-sep{color:var(--border-strong);font-style:normal;font-weight:300;font-size:18px;line-height:1}
+.nav-logo-sub{color:var(--text-muted);font-size:13px;font-style:normal;font-weight:400;white-space:nowrap}
+.nav-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.nav-tab{padding:6px 14px;font-size:13px;color:var(--text-secondary);cursor:pointer;border-radius:var(--r-sm);transition:all .15s;border:none;background:none;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.nav-tab:hover{color:var(--text);background:var(--bg-warm)}.nav-tab.active{color:var(--text);background:var(--bg-warm);font-weight:500}
+/* v7: avatar never squishes */
+.nav-avatar{width:30px;height:30px;min-width:30px;border-radius:50%;background:var(--accent-light);color:var(--accent);font-size:11px;font-family:'DM Mono',monospace;font-weight:600;display:flex;align-items:center;justify-content:center;text-transform:uppercase;cursor:pointer;border:2px solid var(--accent-dim);flex-shrink:0}
+
+/* ── ONBOARD ── */
+.onboard-overlay{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;align-items:center;justify-content:center;padding:24px}
+.onboard-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);padding:52px 56px;max-width:480px;width:100%;text-align:center}
+.onboard-icon{width:52px;height:52px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;margin:0 auto 24px}
+.onboard-title{font-family:'Lora',serif;font-size:24px;font-weight:400;margin-bottom:8px;letter-spacing:-.01em}
+.onboard-sub{font-size:14px;color:var(--text-secondary);margin-bottom:32px;line-height:1.6}
+.onboard-input{width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:var(--r-md);font-family:'DM Sans',sans-serif;font-size:16px;color:var(--text);background:var(--surface);text-align:center;outline:none;transition:border-color .15s,box-shadow .15s;margin-bottom:16px}
+.onboard-input:focus{border-color:var(--accent-mid);box-shadow:0 0 0 4px rgba(45,90,61,.09)}
+.onboard-btn{width:100%;padding:13px;background:var(--text);color:white;border:none;border-radius:var(--r-md);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer}
+.onboard-btn:hover{background:#2e2b27}
+
+/* ── PAGE ── */
+.page{max-width:980px;margin:0 auto;padding:52px 36px}
+.eyebrow{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px}
+.page-title{font-family:'Lora',serif;font-size:28px;font-weight:400;letter-spacing:-.02em;line-height:1.25;margin-bottom:4px}
+.page-subtitle{color:var(--text-muted);font-size:14px;margin-bottom:44px;line-height:1.55}
+h2{font-size:15px;font-weight:500;letter-spacing:-.01em}
+
+/* ── PAGE TABS ── */
+.page-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:36px}
+.page-tab{padding:11px 18px;font-size:13px;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;transition:all .15s}
+.page-tab:hover{color:var(--text)}.page-tab.active{color:var(--text);border-bottom-color:var(--accent);font-weight:500}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:var(--r-pill);font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.badge-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.badge-on-track{background:var(--accent-light);color:var(--accent)}.badge-on-track .badge-dot{background:var(--accent)}
+.badge-at-risk{background:var(--warn-light);color:var(--warn)}.badge-at-risk .badge-dot{background:var(--warn)}
+.badge-overdue{background:var(--danger-light);color:var(--danger)}.badge-overdue .badge-dot{background:var(--danger)}
+
+/* ── STATUS PILLS — unified size ── */
+.sp{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:var(--r-pill);white-space:nowrap;display:inline-flex;align-items:center;line-height:1}
+.sp-ns{background:var(--bg-warm);color:var(--text-muted);border:1px solid var(--border)}
+.sp-ip{background:var(--warn-light);color:var(--warn);border:1px solid var(--warn-border)}
+.sp-done{background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-dim)}
+.req-tag{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:4px 10px;border-radius:var(--r-pill);background:var(--danger-light);color:var(--danger);border:1px solid var(--danger-border);white-space:nowrap;display:inline-flex;align-items:center;line-height:1}
+.opt-tag{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:4px 10px;border-radius:var(--r-pill);background:var(--bg-warm);color:var(--text-muted);border:1px solid var(--border);white-space:nowrap;display:inline-flex;align-items:center;line-height:1}
+
+/* ── PROGRESS ── */
+.progress-wrap{margin:0}
+.progress-meta{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);margin-bottom:9px}
+.progress-meta strong{color:var(--text);font-weight:500}
+.progress-track{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width .7s cubic-bezier(.4,0,.2,1),background-color .7s ease}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 17px;border-radius:var(--r-md);font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;border:none;transition:all .15s;line-height:1;white-space:nowrap}
+.btn-primary{background:var(--text);color:white}.btn-primary:hover{background:#2c2920}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border-strong)}.btn-secondary:hover{background:var(--bg-warm)}
+.btn-ghost{background:none;color:var(--text-secondary);padding:7px 12px;border:none;border-radius:var(--r-md)}.btn-ghost:hover{background:var(--bg-warm);color:var(--text)}
+.btn-accent{background:var(--accent);color:white}.btn-accent:hover{background:var(--accent-mid)}
+.btn-danger{background:none;color:var(--danger);padding:7px 12px;border:none}.btn-danger:hover{background:var(--danger-light);border-radius:var(--r-md)}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:var(--r-sm)}.btn-xs{padding:3px 9px;font-size:11px;border-radius:var(--r-sm)}
+.btn-icon{padding:7px;border-radius:var(--r-md);background:none;border:none;cursor:pointer;color:var(--text-muted);transition:all .15s;display:inline-flex;align-items:center}.btn-icon:hover{background:var(--bg-warm);color:var(--text)}
+
+/* ── FORMS ── */
+.form-group{margin-bottom:22px}
+.form-label{display:block;font-family:'DM Mono',monospace;font-size:11px;color:var(--text-secondary);margin-bottom:7px;letter-spacing:.04em;text-transform:uppercase}
+.form-input,.form-select,.form-textarea{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--r-md);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--surface);transition:border-color .15s,box-shadow .15s;outline:none;appearance:none;line-height:1.5}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent-mid);box-shadow:0 0 0 3px rgba(45,90,61,.09)}
+.form-textarea{resize:vertical;min-height:100px}
+.form-hint{font-size:12px;color:var(--text-muted);margin-top:5px;line-height:1.4}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* ── TOGGLE ── */
+.toggle-wrap{display:flex;align-items:center;gap:10px;cursor:pointer}
+.toggle{width:34px;height:20px;background:var(--border);border-radius:10px;position:relative;transition:background .2s;cursor:pointer;border:none;flex-shrink:0}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;background:white;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.toggle.on{background:var(--accent)}.toggle.on::after{transform:translateX(14px)}
+.toggle-label{font-size:13px;color:var(--text-secondary)}
+
+/* ── CHIPS ── */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 6px;background:var(--surface-warm);border-radius:var(--r-pill);font-size:12px;color:var(--text-secondary);border:1px solid var(--border);line-height:1}
+.chip-av{width:18px;height:18px;border-radius:50%;background:var(--accent-light);color:var(--accent);font-size:9px;font-weight:600;font-family:'DM Mono',monospace;display:inline-flex;align-items:center;justify-content:center;text-transform:uppercase;flex-shrink:0}
+.chips{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.chip-blue{background:var(--cc-blue-bg);color:var(--cc-blue-text);border-color:var(--cc-blue-border)}
+.chip-violet{background:var(--cc-violet-bg);color:var(--cc-violet-text);border-color:var(--cc-violet-border)}
+.chip-amber{background:var(--cc-amber-bg);color:var(--cc-amber-text);border-color:var(--cc-amber-border)}
+.chip-teal{background:var(--cc-teal-bg);color:var(--cc-teal-text);border-color:var(--cc-teal-border)}
+.chip-rose{background:var(--cc-rose-bg);color:var(--cc-rose-text);border-color:var(--cc-rose-border)}
+.chip-sand{background:var(--cc-sand-bg);color:var(--cc-sand-text);border-color:var(--cc-sand-border)}
+.chip-blue .chip-av{background:var(--cc-blue-border);color:var(--cc-blue-text)}
+.chip-violet .chip-av{background:var(--cc-violet-border);color:var(--cc-violet-text)}
+.chip-amber .chip-av{background:var(--cc-amber-border);color:var(--cc-amber-text)}
+.chip-teal .chip-av{background:var(--cc-teal-border);color:var(--cc-teal-text)}
+.chip-rose .chip-av{background:var(--cc-rose-border);color:var(--cc-rose-text)}
+.chip-sand .chip-av{background:var(--cc-sand-border);color:var(--cc-sand-text)}
+
+/* ── COLOR SWATCHES ── */
+.color-picker-row{display:flex;align-items:center;gap:6px;margin-top:6px}
+.color-swatch{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .12s,border-color .12s;flex-shrink:0}
+.color-swatch:hover{transform:scale(1.15)}.color-swatch.selected{border-color:var(--text);transform:scale(1.1)}
+.color-swatch-blue{background:var(--cc-blue-bg);outline:1.5px solid var(--cc-blue-border);outline-offset:1px}
+.color-swatch-violet{background:var(--cc-violet-bg);outline:1.5px solid var(--cc-violet-border);outline-offset:1px}
+.color-swatch-amber{background:var(--cc-amber-bg);outline:1.5px solid var(--cc-amber-border);outline-offset:1px}
+.color-swatch-teal{background:var(--cc-teal-bg);outline:1.5px solid var(--cc-teal-border);outline-offset:1px}
+.color-swatch-rose{background:var(--cc-rose-bg);outline:1.5px solid var(--cc-rose-border);outline-offset:1px}
+.color-swatch-sand{background:var(--cc-sand-bg);outline:1.5px solid var(--cc-sand-border);outline-offset:1px}
+
+/* ── META ── */
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,auto));gap:16px 44px;margin-bottom:28px}
+.meta-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:4px}
+.meta-value{font-size:14px;color:var(--text);line-height:1.4}
+.meta-dim{color:var(--text-secondary)}
+
+/* ── PROJECT CARDS ── */
+.projects-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:28px}
+.project-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px 26px;box-shadow:var(--shadow-sm);cursor:pointer;transition:all .2s;position:relative}
+.project-card:hover{box-shadow:var(--shadow-md);border-color:var(--border-strong);transform:translateY(-2px)}
+.project-card-name{font-family:'Lora',serif;font-size:17px;font-weight:400;letter-spacing:-.01em;margin-bottom:5px;line-height:1.3;padding-right:70px}
+.project-card-dates{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);margin-bottom:16px;line-height:1.6}
+.project-card-badge{position:absolute;top:22px;right:22px}
+.project-card-new{border-style:dashed;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:170px;gap:9px;color:var(--text-muted)}
+.project-card-new:hover{background:var(--surface-warm);transform:none}
+
+/* ── ADMIN SECTION ROWS ── */
+.sec-row{border-bottom:1px solid var(--border)}.sec-row:last-child{border-bottom:none}
+.sec-row-main{display:grid;grid-template-columns:1fr auto;align-items:start;padding:17px 24px;gap:16px}
+.sec-row-title{font-size:14px;font-weight:500;margin-bottom:7px}
+.sec-row-meta{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.sec-row-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;padding-top:2px}
+.sec-row-ts{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);white-space:nowrap}
+
+/* ── RESPONSE PANEL ── */
+.resp-panel{display:none;padding:0 24px 20px;border-top:1px solid var(--border);background:var(--surface-warm)}
+.resp-panel.open{display:block}
+.resp-header{display:flex;align-items:center;justify-content:space-between;padding-top:14px;margin-bottom:6px}
+.resp-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted)}
+.resp-copy-btn{padding:4px 12px;font-size:11px;font-family:'DM Mono',monospace;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--r-sm);cursor:pointer;color:var(--text-secondary);transition:all .15s;white-space:nowrap}
+.resp-copy-btn:hover{background:var(--bg-warm);color:var(--text)}.resp-copy-btn.copied{background:var(--accent-light);color:var(--accent);border-color:var(--accent-dim)}
+.resp-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:15px 18px;font-size:13px;color:var(--text-secondary);line-height:1.78;white-space:pre-wrap}
+.notes-block{margin-top:10px;background:#fffdf5;border:1px solid var(--gold-border);border-radius:var(--r-md);padding:12px 16px;font-size:12px;color:var(--gold);font-family:'DM Mono',monospace;line-height:1.65}
+.notes-block-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--gold);margin-bottom:4px}
+
+/* ── v7: UPLOADED FILES in admin response panel ── */
+.resp-files{margin-top:12px}
+.resp-files-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:8px;display:block}
+.resp-file-list{display:flex;flex-wrap:wrap;gap:7px}
+.resp-file-item{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.resp-file-item:hover{background:var(--bg-warm);border-color:var(--border-strong);color:var(--text)}
+.resp-file-icon{color:var(--text-muted);flex-shrink:0}
+.resp-file-name{font-family:'DM Mono',monospace;font-size:11px}
+.resp-file-size{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted)}
+
+/* ── EMAIL HISTORY ── */
+.email-history{margin-top:28px}
+.email-history-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.email-history-title{font-size:14px;font-weight:500}
+.email-history-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);background:var(--bg-warm);border:1px solid var(--border);padding:2px 9px;border-radius:var(--r-pill)}
+.email-log{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.email-log-row{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);gap:12px}
+.email-log-row:last-child{border-bottom:none}
+.email-log-left{flex:1;min-width:0}
+.email-log-subject{font-size:13px;font-weight:500;margin-bottom:3px}
+.email-log-recipients{font-size:12px;color:var(--text-muted)}
+.email-log-ts{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);white-space:nowrap;flex-shrink:0}
+.email-log-type{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:var(--r-pill);white-space:nowrap;display:inline-flex;align-items:center}
+.email-log-type-standard{background:var(--bg-warm);color:var(--text-muted);border:1px solid var(--border)}
+.email-log-type-urgent{background:var(--warn-light);color:var(--warn);border:1px solid var(--warn-border)}
+.email-log-type-initial{background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-dim)}
+
+/* ── INCOMPLETE ── */
+.incomplete-card{background:var(--warn-light);border:1px solid var(--warn-border);border-radius:var(--r-lg);padding:22px 26px;margin-top:24px}
+.incomplete-card h3{color:var(--warn);font-size:13px;margin-bottom:14px}
+.incomplete-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(122,64,16,.1);font-size:13px}
+.incomplete-item:last-child{border-bottom:none}
+.inc-assignees{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);margin-top:2px}
+
+/* ── DRAFT CARDS ── */
+.draft-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.draft-card-header{padding:16px 22px;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface-warm);gap:14px}
+.draft-card-body{padding:18px 22px}
+.draft-subject{font-size:13px;font-weight:500;margin-bottom:8px}
+/* v7: email preview uses DM Sans not DM Mono */
+.draft-preview{font-size:13px;color:var(--text-secondary);background:var(--bg);border-radius:var(--r-md);padding:13px 15px;font-family:'DM Sans',sans-serif;line-height:1.7;max-height:110px;overflow:hidden;position:relative}
+.draft-preview::after{content:'';position:absolute;bottom:0;left:0;right:0;height:32px;background:linear-gradient(transparent,var(--bg))}
+.draft-recipients{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;align-items:center}
+.draft-actions{display:flex;gap:8px;padding:13px 22px;background:var(--surface-warm);border-top:1px solid var(--border)}
+.count-bubble{background:var(--danger-light);color:var(--danger);font-size:10px;font-family:'DM Mono',monospace;padding:1px 7px;border-radius:var(--r-pill);font-weight:500;margin-left:5px;border:1px solid var(--danger-border)}
+
+/* ── CIRCLE + CONTACT PICKER ── */
+.add-contact-btn{width:26px;height:26px;border-radius:50%;border:1.5px dashed var(--border-strong);background:var(--surface);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;padding:0}
+.add-contact-btn:hover{border-color:var(--accent-mid);color:var(--accent);background:var(--accent-light);border-style:solid}
+.contact-picker-dropdown{position:fixed;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);z-index:9900;min-width:220px;overflow:hidden;display:none}
+.contact-picker-dropdown.open{display:block}
+.contact-picker-item{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;font-size:13px;color:var(--text);transition:background .1s;border-bottom:1px solid var(--border)}
+.contact-picker-item:last-child{border-bottom:none}.contact-picker-item:hover{background:var(--bg-warm)}
+.contact-picker-item-role{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);margin-left:auto}
+.contact-picker-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);padding:9px 16px 5px;display:block;background:var(--surface-warm);border-bottom:1px solid var(--border)}
+
+/* ── BACK ── */
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;padding:0;margin-bottom:32px;transition:color .15s}
+.back-btn:hover{color:var(--text)}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,23,19,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)}
+/* v7: clip modal so scrollbar stays inside rounded corners */
+.modal{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:100%;max-width:560px;max-height:90vh;overflow:hidden;border:1px solid var(--border);display:flex;flex-direction:column}
+.modal-lg{max-width:680px}
+.modal-scroll{overflow-y:auto;flex:1}
+/* custom scrollbar inside modal */
+.modal-scroll::-webkit-scrollbar{width:5px}
+.modal-scroll::-webkit-scrollbar-track{background:transparent;margin:var(--r-lg)}
+.modal-scroll::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+.modal-header{padding:28px 32px 0;display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;flex-shrink:0}
+.modal-title{font-family:'Lora',serif;font-size:19px;font-weight:400;letter-spacing:-.01em}
+.modal-body{padding:0 32px}
+.modal-footer{padding:24px 32px;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border);flex-shrink:0}
+.modal-section-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-top:4px;display:block}
+
+/* ── CLIENT HEADER ── */
+.client-header{background:var(--surface);border-bottom:1px solid var(--border)}
+.client-header-inner{max-width:980px;margin:0 auto;padding:44px 36px 36px}
+.client-tagline{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:10px}
+.client-project-name{font-family:'Lora',serif;font-size:30px;font-weight:400;letter-spacing:-.02em;margin-bottom:24px;line-height:1.2}
+.client-dates{display:flex;align-items:center;gap:12px;margin-top:20px;flex-wrap:wrap}
+.client-date-group{display:flex;align-items:center;gap:10px}
+.client-date-label{font-family:'Lora',serif;font-size:17px;font-weight:500;color:var(--text-secondary);letter-spacing:-.01em}
+.client-date-value{font-family:'Lora',serif;font-size:17px;font-weight:500;color:var(--text);letter-spacing:-.01em}
+.client-date-sep{color:var(--border-strong);font-size:16px;line-height:1}
+.client-date-secondary{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);opacity:.65}
+
+/* ── CLIENT BODY ── */
+.client-body{max-width:980px;margin:0 auto;padding:36px 36px 80px}
+.client-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:32px}
+.client-tab{padding:11px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;transition:all .15s}
+.client-tab.active{color:var(--text);border-bottom-color:var(--accent);font-weight:500}
+
+/* ── CLIENT SECTION CARDS ── */
+.cs-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);margin-bottom:14px;overflow:hidden;transition:box-shadow .2s,border-color .2s}
+.cs-card:hover{box-shadow:var(--shadow-md)}.cs-card.cs-done{border-color:var(--accent-dim)}
+.cs-header{display:flex;align-items:center;justify-content:space-between;padding:20px 26px;cursor:pointer;user-select:none;gap:12px;transition:background .12s}
+.cs-header:hover{background:var(--surface-warm)}
+.cs-header-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1}
+.cs-title{font-family:'Lora',serif;font-size:16px;font-weight:400;letter-spacing:-.01em}
+.cs-chevron{transition:transform .22s;flex-shrink:0;color:var(--text-muted)}.cs-chevron.open{transform:rotate(180deg)}
+.cs-summary{padding:0 26px 22px}
+.cs-summary-text{font-size:13px;color:var(--text-secondary);background:var(--bg);border-radius:var(--r-md);padding:14px 16px;line-height:1.72;white-space:pre-wrap;overflow:hidden;max-height:66px;position:relative}
+.cs-summary-text::after{content:'';position:absolute;bottom:0;left:0;right:0;height:28px;background:linear-gradient(transparent,var(--bg))}
+.cs-summary-edit{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--accent-mid);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;margin-top:9px;transition:color .15s}
+.cs-summary-edit:hover{color:var(--accent);text-decoration:underline}
+.cs-body{padding:0 26px 26px;display:flex;flex-direction:column;gap:18px}.cs-body.collapsed{display:none}
+.cs-inst-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:7px}
+.cs-inst-text{font-size:14px;color:var(--text-secondary);line-height:1.78}
+.cs-textarea{width:100%;padding:15px 17px;border:1px solid var(--border);border-radius:var(--r-md);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--surface);min-height:180px;resize:vertical;line-height:1.7;transition:border-color .15s,box-shadow .15s;outline:none}
+.cs-textarea:focus{border-color:var(--accent-mid);box-shadow:0 0 0 3px rgba(45,90,61,.09)}
+.cs-textarea::placeholder{color:var(--text-muted);font-style:italic}
+.char-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);text-align:right;margin-top:-12px}
+.char-count.over{color:var(--danger)}
+.cs-assign-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:7px}
+.action-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.complete-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--r-pill);font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--text-secondary);transition:all .2s;line-height:1}
+.complete-pill:hover{border-color:var(--accent-mid);color:var(--accent);background:var(--accent-light)}
+.complete-pill.done{background:var(--accent);border-color:var(--accent);color:white}
+.complete-pill .c-icon{display:none}.complete-pill.done .c-icon{display:inline-flex}
+.attach-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--r-pill);font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap;border:1.5px solid var(--border-strong);background:var(--surface);color:var(--text-secondary);transition:all .15s;line-height:1}
+.attach-pill:hover{background:var(--bg-warm)}.attach-pill.has-files{background:var(--bg-warm);color:var(--text)}
+.attach-pill input{display:none}
+.file-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.file-item{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;background:var(--surface-warm);border:1px solid var(--border);border-radius:var(--r-pill);font-family:'DM Mono',monospace;font-size:11px;color:var(--text-secondary)}
+.file-remove{background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;line-height:1;display:flex;align-items:center}.file-remove:hover{color:var(--danger)}
+.cs-notes-section{padding-top:16px;border-top:1px solid var(--border)}
+.cs-notes-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:4px}
+.cs-notes-hint{font-size:12px;color:var(--text-muted);margin-bottom:9px;line-height:1.45;font-style:italic}
+.cs-notes-input{width:100%;padding:12px 15px;border:1px solid var(--border);border-radius:var(--r-md);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:#fffdf7;min-height:68px;resize:vertical;line-height:1.65;outline:none;transition:border-color .15s}
+.cs-notes-input:focus{border-color:var(--gold-border)}.cs-notes-input::placeholder{color:var(--text-muted);font-style:italic}
+.autosave{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);margin-top:4px}
+.autosave-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:.9}50%{opacity:.2}}
+
+/* ── ALL RESPONSES — v7: no collapse, full text shown ── */
+.agg-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:12px}
+.agg-header{display:flex;align-items:center;justify-content:space-between;padding:15px 22px;border-bottom:1px solid var(--border);background:var(--surface-warm);flex-wrap:wrap;gap:8px}
+.agg-header-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.agg-body{padding:18px 22px}
+.agg-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:8px}
+/* v7: full text — no max-height, no overflow clip */
+.agg-value{font-size:13px;color:var(--text);line-height:1.85;background:var(--bg);padding:16px 18px;border-radius:var(--r-md);white-space:pre-wrap}
+.agg-empty{font-size:13px;color:var(--text-muted);font-style:italic}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--text);color:white;padding:13px 20px;border-radius:var(--r-lg);font-size:13px;line-height:1.4;box-shadow:var(--shadow-lg);z-index:9999;transform:translateY(72px);opacity:0;transition:all .32s cubic-bezier(.34,1.56,.64,1);max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+.hr{border:none;border-top:1px solid var(--border);margin:28px 0}
+
+/* ════════════════════════════════
+   RESPONSIVE — MOBILE
+════════════════════════════════ */
+@media(max-width:680px){
+  /* Nav — keep items from squishing */
+  .nav{padding:0 16px;gap:8px}
+  .nav-logo-sub{display:none}
+  .nav-tab{padding:6px 10px;font-size:12px}
+
+  /* Page */
+  .page{padding:28px 16px}
+  .client-header-inner,.client-body{padding-left:16px;padding-right:16px}
+
+  /* v7: Dashboard header — stack button below title on mobile */
+  .dash-header{flex-direction:column;align-items:flex-start;gap:12px}
+  .dash-header .btn{align-self:flex-start}
+
+  /* Projects grid — single column */
+  .projects-grid{grid-template-columns:1fr;margin-top:20px}
+
+  /* v7: Admin section rows — full mobile layout */
+  .sec-row-main{
+    grid-template-columns:1fr;
+    gap:10px;
+    padding:14px 16px;
+  }
+  .sec-row-actions{
+    flex-wrap:wrap;
+    gap:6px;
+    padding-top:0;
+    border-top:1px solid var(--border);
+    padding-top:10px;
+  }
+  .sec-row-ts{
+    flex-basis:100%;
+    order:-1; /* timestamp first */
+  }
+  /* Pills row — wrap naturally, no excess whitespace */
+  .sec-row-meta{gap:4px}
+
+  /* v7: Email log rows on mobile */
+  .email-log-row{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:6px;
+    padding:12px 14px;
+  }
+  .email-log-ts{
+    font-size:10px;
+    opacity:.7;
+  }
+  .email-log-left{width:100%}
+
+  /* Forms */
+  .form-row{grid-template-columns:1fr}
+  .modal-header,.modal-body,.modal-footer{padding-left:20px;padding-right:20px}
+
+  /* Client header */
+  .client-project-name{font-size:22px}
+  .client-date-label,.client-date-value{font-size:14px}
+
+  /* Draft preview */
+  .draft-card-body{padding:14px 16px}
+  .draft-actions{padding:10px 16px;flex-wrap:wrap}
+
+  /* Reminder banner */
+  .reminder-banner{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<!-- ONBOARD -->
+<div id="onboard" class="onboard-overlay">
+  <div class="onboard-card">
+    <div class="onboard-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 100-10 5 5 0 000 10z" stroke="#2d5a3d" stroke-width="1.5"/><path d="M20 21a8 8 0 10-16 0" stroke="#2d5a3d" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+    <div class="onboard-title">Welcome to your dashboard</div>
+    <p class="onboard-sub">What should we call you? We'll personalise the experience for you.</p>
+    <input class="onboard-input" id="onboard-name" type="text" placeholder="Your first name" autocomplete="given-name">
+    <button class="onboard-btn" onclick="finishOnboard()">Get started</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav" id="main-nav" style="display:none;">
+  <div class="nav-logo" onclick="showView('admin-list')">
+    <span class="nav-logo-name" id="nav-name">Brad</span>
+    <span class="nav-logo-sep">·</span>
+    <span class="nav-logo-sub">Proposal Tracker</span>
+  </div>
+  <div class="nav-right">
+    <button class="nav-tab active" id="nav-admin" onclick="switchNav('admin')">Admin</button>
+    <button class="nav-tab" id="nav-client" onclick="switchNav('client')">Client View</button>
+    <div class="nav-avatar" id="nav-avatar">BR</div>
+  </div>
+</nav>
+
+
+<!-- ═══════════════════════════════════════
+     ADMIN — PROJECT LIST
+═══════════════════════════════════════ -->
+<div id="view-admin-list" class="view">
+  <div class="page">
+
+    <!-- v7: dash-header class for mobile stacking -->
+    <div class="dash-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:4px;">
+      <div>
+        <div class="eyebrow">Dashboard</div>
+        <h1 class="page-title" id="dash-title">Brad's Projects</h1>
+        <p class="page-subtitle" style="margin-bottom:0;">Manage your proposal requests and track client progress</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-new-project')" style="margin-top:6px;">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>New Project
+      </button>
+    </div>
+
+    <!-- Drafts banner -->
+    <div class="reminder-banner" style="background:var(--gold-light);border:1px solid var(--gold-border);border-radius:var(--r-lg);padding:16px 22px;margin-top:28px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:2px;">2 reminder drafts pending your review</div>
+        <div style="font-size:13px;color:var(--text-secondary);">Generated overnight — approve or dismiss before they're sent</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="switchPageTab('tab-drafts')">Review Drafts</button>
+    </div>
+
+    <div class="page-tabs">
+      <button class="page-tab active" id="tab-projects" onclick="switchPageTab('tab-projects')">All Projects</button>
+      <button class="page-tab" id="tab-drafts" onclick="switchPageTab('tab-drafts')">Reminder Drafts <span class="count-bubble" id="draft-count">2</span></button>
+    </div>
+
+    <!-- PROJECTS -->
+    <div id="panel-projects">
+      <div class="projects-grid">
+        <div class="project-card" onclick="showView('admin-detail')">
+          <span class="project-card-badge"><span class="badge badge-at-risk"><span class="badge-dot"></span>At Risk</span></span>
+          <div class="project-card-name">Riverside Community Center</div>
+          <div class="project-card-dates">Info needed Mar 2 &nbsp;·&nbsp; Proposal Mar 28</div>
+          <div class="chips" style="margin-bottom:16px;">
+            <div class="chip chip-blue"><div class="chip-av">SH</div>Sarah H.</div>
+            <div class="chip chip-violet"><div class="chip-av">MR</div>Mark R.</div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-meta"><span>Required sections</span><strong>60%</strong></div>
+            <div class="progress-track"><div class="progress-fill" id="pc1" style="width:60%"></div></div>
+          </div>
+        </div>
+
+        <div class="project-card" onclick="showView('admin-detail')">
+          <span class="project-card-badge"><span class="badge badge-on-track"><span class="badge-dot"></span>On Track</span></span>
+          <div class="project-card-name">Westside Tech HQ Renovation</div>
+          <div class="project-card-dates">Info needed Mar 15 &nbsp;·&nbsp; Proposal Apr 5</div>
+          <div class="chips" style="margin-bottom:16px;">
+            <div class="chip chip-teal"><div class="chip-av">MK</div>Mike K.</div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-meta"><span>Required sections</span><strong>100%</strong></div>
+            <div class="progress-track"><div class="progress-fill" id="pc2" style="width:100%"></div></div>
+          </div>
+        </div>
+
+        <div class="project-card" onclick="showView('admin-detail')">
+          <span class="project-card-badge"><span class="badge badge-overdue"><span class="badge-dot"></span>Overdue</span></span>
+          <div class="project-card-name">Harbor View Mixed-Use Development</div>
+          <div class="project-card-dates">Info needed Feb 20 &nbsp;·&nbsp; Proposal Mar 10</div>
+          <div class="chips" style="margin-bottom:16px;">
+            <div class="chip chip-amber"><div class="chip-av">JD</div>Jenna D.</div>
+            <div class="chip chip-rose"><div class="chip-av">TW</div>Tom W.</div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-meta"><span>Required sections</span><strong>30%</strong></div>
+            <div class="progress-track"><div class="progress-fill" id="pc3" style="width:30%"></div></div>
+          </div>
+        </div>
+
+        <div class="project-card project-card-new" onclick="openModal('modal-new-project')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="opacity:.3"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span style="font-size:13px;">New project</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRAFTS -->
+    <div id="panel-drafts" style="display:none;">
+
+      <div class="draft-card">
+        <div class="draft-card-header">
+          <div>
+            <div style="font-size:13px;font-weight:500;margin-bottom:3px;">Riverside Community Center</div>
+            <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);">Standard · Feb 27, 9:00 AM</div>
+          </div>
+          <span class="badge" style="background:var(--warn-light);color:var(--warn);">Standard</span>
+        </div>
+        <div class="draft-card-body">
+          <div class="draft-subject">Subject: Proposal inputs needed — Riverside Community Center</div>
+          <div class="draft-preview">Hello,
+
+We're still waiting on a few inputs for the Riverside Community Center proposal, due March 2nd.
+
+Outstanding:
+— Program Requirements (Sarah H., Mark R.)
+— Project Schedule (Mark R.)
+
+Please use the link below to complete your sections. It should only take a few minutes.
+
+Thank you for your time,
+Brad</div>
+          <div class="draft-recipients" id="recipients-1">
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);margin-right:2px;line-height:26px;">To:</span>
+            <div class="chip chip-blue" style="padding-right:6px;"><div class="chip-av">SH</div>Sarah H.<button class="btn-icon" style="padding:2px;margin-left:2px;" onclick="removeChip(this)"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+            <div class="chip chip-violet" style="padding-right:6px;"><div class="chip-av">MR</div>Mark R.<button class="btn-icon" style="padding:2px;margin-left:2px;" onclick="removeChip(this)"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+            <button class="add-contact-btn" onclick="openPicker(event,'picker-1')" title="Add contact"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+          </div>
+        </div>
+        <div class="draft-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openModal('modal-edit-draft')">Edit Email</button>
+          <button class="btn btn-accent btn-sm" onclick="approveDraft(this)">Approve &amp; Send</button>
+          <button class="btn btn-ghost btn-sm" onclick="dismissDraft(this)">Dismiss</button>
+        </div>
+      </div>
+
+      <div class="draft-card" style="border-color:var(--warn-border);">
+        <div class="draft-card-header" style="background:var(--warn-light);">
+          <div>
+            <div style="font-size:13px;font-weight:500;margin-bottom:3px;">Riverside Community Center</div>
+            <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);">Urgent · Feb 27, 9:00 AM</div>
+          </div>
+          <span class="badge badge-at-risk">Urgent</span>
+        </div>
+        <div class="draft-card-body">
+          <div class="draft-subject">Subject: Proposal Inputs Needed – Due in 3 Days</div>
+          <div class="draft-preview">Hi,
+
+The deadline for Riverside Community Center is in 3 days (March 2nd). We still need your inputs to complete the proposal. Please take a moment to fill in any outstanding sections using the link below.</div>
+          <div class="draft-recipients" id="recipients-2">
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);margin-right:2px;line-height:26px;">To:</span>
+            <div class="chip chip-blue" style="padding-right:6px;"><div class="chip-av">SH</div>Sarah H.<button class="btn-icon" style="padding:2px;margin-left:2px;" onclick="removeChip(this)"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+            <div class="chip chip-violet" style="padding-right:6px;"><div class="chip-av">MR</div>Mark R.<button class="btn-icon" style="padding:2px;margin-left:2px;" onclick="removeChip(this)"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+            <button class="add-contact-btn" onclick="openPicker(event,'picker-2')" title="Add contact"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+          </div>
+        </div>
+        <div class="draft-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openModal('modal-edit-draft')">Edit Email</button>
+          <button class="btn btn-accent btn-sm" onclick="approveDraft(this)">Approve &amp; Send</button>
+          <button class="btn btn-ghost btn-sm" onclick="dismissDraft(this)">Dismiss</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Contact pickers -->
+<div class="contact-picker-dropdown" id="picker-1">
+  <span class="contact-picker-label">Add to email</span>
+  <div class="contact-picker-item" onclick="addContactToDraft('recipients-1','LP','Linda Park','sand',this)"><div class="chip-av" style="background:var(--cc-sand-border);color:var(--cc-sand-text);width:22px;height:22px;font-size:10px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:600;flex-shrink:0;">LP</div>Linda Park<span class="contact-picker-item-role">Board Chair</span></div>
+  <div class="contact-picker-item" onclick="addContactToDraft('recipients-1','TW','Tom Wilson','amber',this)"><div class="chip-av" style="background:var(--cc-amber-border);color:var(--cc-amber-text);width:22px;height:22px;font-size:10px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:600;flex-shrink:0;">TW</div>Tom Wilson<span class="contact-picker-item-role">Director</span></div>
+</div>
+<div class="contact-picker-dropdown" id="picker-2">
+  <span class="contact-picker-label">Add to email</span>
+  <div class="contact-picker-item" onclick="addContactToDraft('recipients-2','LP','Linda Park','sand',this)"><div class="chip-av" style="background:var(--cc-sand-border);color:var(--cc-sand-text);width:22px;height:22px;font-size:10px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:600;flex-shrink:0;">LP</div>Linda Park<span class="contact-picker-item-role">Board Chair</span></div>
+  <div class="contact-picker-item" onclick="addContactToDraft('recipients-2','TW','Tom Wilson','amber',this)"><div class="chip-av" style="background:var(--cc-amber-border);color:var(--cc-amber-text);width:22px;height:22px;font-size:10px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:600;flex-shrink:0;">TW</div>Tom Wilson<span class="contact-picker-item-role">Director</span></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     ADMIN — PROJECT DETAIL
+═══════════════════════════════════════ -->
+<div id="view-admin-detail" class="view">
+  <div class="page">
+    <button class="back-btn" onclick="showView('admin-list')"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 1L3 6l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>All Projects</button>
+
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:6px;">
+      <div>
+        <div class="eyebrow">Project</div>
+        <h1 class="page-title">Riverside Community Center</h1>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:16px;">
+        <span class="badge badge-at-risk"><span class="badge-dot"></span>At Risk</span>
+        <button class="btn btn-secondary btn-sm" onclick="openModal('modal-edit-project')">Edit Project</button>
+      </div>
+    </div>
+
+    <div class="meta-grid">
+      <div><div class="meta-label">Info Needed By</div><div class="meta-value">March 2, 2025</div></div>
+      <div><div class="meta-label">Proposal Due</div><div class="meta-value meta-dim">March 28, 2025</div></div>
+      <div><div class="meta-label">Reminders</div><div class="meta-value">Every 2 days</div></div>
+      <div><div class="meta-label">Client Link</div><div class="meta-value" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent-mid);cursor:pointer;" onclick="notify('Link copied to clipboard')">Copy link ↗</div></div>
+    </div>
+
+    <div style="margin-bottom:26px;">
+      <div class="meta-label" style="margin-bottom:8px;">Contacts</div>
+      <div class="chips">
+        <div class="chip chip-blue"><div class="chip-av">SH</div>Sarah Holloway <span style="font-family:'DM Mono',monospace;font-size:11px;opacity:.7;margin-left:2px;">sarah@clientco.com</span></div>
+        <div class="chip chip-violet"><div class="chip-av">MR</div>Mark Reeves <span style="font-family:'DM Mono',monospace;font-size:11px;opacity:.7;margin-left:2px;">mark@clientco.com</span></div>
+        <button class="btn btn-ghost btn-xs" onclick="openModal('modal-edit-project')">+ Add</button>
+      </div>
+    </div>
+
+    <div class="progress-wrap" style="margin-bottom:32px;">
+      <div class="progress-meta"><span>Completion — required sections confirmed</span><strong>60%</strong></div>
+      <div class="progress-track"><div class="progress-fill" id="detail-progress" style="width:60%"></div></div>
+    </div>
+
+    <hr class="hr">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <h2>Sections</h2>
+      <button class="btn btn-secondary btn-sm" onclick="openModal('modal-add-section')"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Add Section</button>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:24px;">
+
+      <!-- Row 1 -->
+      <div class="sec-row">
+        <div class="sec-row-main">
+          <div>
+            <div class="sec-row-title">Project Overview &amp; Goals</div>
+            <div class="sec-row-meta">
+              <span class="req-tag">Required</span>
+              <span class="sp sp-done">Complete</span>
+              <div class="chip chip-blue" style="font-size:11px;"><div class="chip-av">SH</div>Sarah H.</div>
+            </div>
+          </div>
+          <div class="sec-row-actions">
+            <span class="sec-row-ts">Feb 25, 2:14 PM</span>
+            <button class="btn btn-ghost btn-xs" onclick="toggleResp('rp1',this)">Show response</button>
+            <button class="btn btn-ghost btn-xs" onclick="openModal('modal-edit-section')">Edit</button>
+          </div>
+        </div>
+        <div class="resp-panel" id="rp1">
+          <div class="resp-header"><span class="resp-label">Client response</span><button class="resp-copy-btn" onclick="copyResp(this,'rt1')">Copy</button></div>
+          <div class="resp-block" id="rt1">The Riverside Community Center will serve as a multi-generational hub for the East Riverside neighborhood. The facility should accommodate a range of activities including fitness classes, youth programs, senior services, and community events. Key goals include ADA accessibility throughout, natural light in major activity spaces, and a design that reflects the neighborhood's diverse cultural heritage.
+
+The existing site is approximately 1.8 acres and sits adjacent to Riverside Park. We would like to retain the existing mature oak trees on the north boundary if possible.</div>
+          <!-- v7: uploaded files shown in admin response panel -->
+          <div class="resp-files">
+            <span class="resp-files-label">Attached files</span>
+            <div class="resp-file-list">
+              <div class="resp-file-item" onclick="notify('Opening Site_Survey_2024.pdf…')">
+                <svg class="resp-file-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5"/><polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.5"/></svg>
+                <span class="resp-file-name">Site_Survey_2024.pdf</span>
+                <span class="resp-file-size">2.4 MB</span>
+              </div>
+              <div class="resp-file-item" onclick="notify('Opening Project_Brief.docx…')">
+                <svg class="resp-file-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5"/><polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.5"/></svg>
+                <span class="resp-file-name">Project_Brief.docx</span>
+                <span class="resp-file-size">340 KB</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2 -->
+      <div class="sec-row">
+        <div class="sec-row-main">
+          <div>
+            <div class="sec-row-title">Site Constraints &amp; Conditions</div>
+            <div class="sec-row-meta">
+              <span class="req-tag">Required</span>
+              <span class="sp sp-done">Complete</span>
+              <div class="chip chip-blue" style="font-size:11px;"><div class="chip-av">SH</div>Sarah H.</div>
+            </div>
+          </div>
+          <div class="sec-row-actions">
+            <span class="sec-row-ts">Feb 25, 3:41 PM</span>
+            <button class="btn btn-ghost btn-xs" onclick="toggleResp('rp2',this)">Show response</button>
+            <button class="btn btn-ghost btn-xs" onclick="openModal('modal-edit-section')">Edit</button>
+          </div>
+        </div>
+        <div class="resp-panel" id="rp2">
+          <div class="resp-header"><span class="resp-label">Client response</span><button class="resp-copy-btn" onclick="copyResp(this,'rt2')">Copy</button></div>
+          <div class="resp-block" id="rt2">100-year floodplain affects approximately 20% of the southeast corner of the site. A Phase 1 ESA was completed in 2023 with no RECs identified. Zoning is P-1 Civic/Institutional. Building height limit is 35 feet. Existing sewer connection on the north property line.</div>
+          <div class="resp-files">
+            <span class="resp-files-label">Attached files</span>
+            <div class="resp-file-list">
+              <div class="resp-file-item" onclick="notify('No files attached to this section')">
+                <span style="font-size:12px;color:var(--text-muted);font-style:italic;">No files attached</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3 -->
+      <div class="sec-row">
+        <div class="sec-row-main">
+          <div>
+            <div class="sec-row-title">Program Requirements</div>
+            <div class="sec-row-meta">
+              <span class="req-tag">Required</span>
+              <span class="sp sp-ip">In Progress</span>
+              <div class="chip chip-blue" style="font-size:11px;"><div class="chip-av">SH</div>Sarah H.</div>
+              <div class="chip chip-violet" style="font-size:11px;"><div class="chip-av">MR</div>Mark R.</div>
+            </div>
+          </div>
+          <div class="sec-row-actions">
+            <span class="sec-row-ts">Feb 26, 10:02 AM</span>
+            <button class="btn btn-ghost btn-xs" onclick="toggleResp('rp3',this)">Show response</button>
+            <button class="btn btn-ghost btn-xs" onclick="openModal('modal-edit-section')">Edit</button>
+          </div>
+        </div>
+        <div class="resp-panel" id="rp3">
+          <div class="resp-header"><span class="resp-label">Client response (partial)</span><button class="resp-copy-btn" onclick="copyResp(this,'rt3')">Copy</button></div>
+          <div class="resp-block" id="rt3">Must have:
+— Main gymnasium / activity hall (min 6,000 SF)
+— Commercial kitchen
+— 3–4 meeting rooms (200–400 SF each)
+— Administrative offices (approx 800 SF)
+
+Nice to have:</div>
+          <div class="notes-block"><div class="notes-block-label" id="notes-freelancer-label">Note for freelancer</div>Not sure about the kitchen spec — will confirm with our chef consultant by end of week.</div>
+        </div>
+      </div>
+
+      <!-- Row 4 -->
+      <div class="sec-row">
+        <div class="sec-row-main">
+          <div>
+            <div class="sec-row-title">Project Schedule &amp; Milestones</div>
+            <div class="sec-row-meta">
+              <span class="req-tag">Required</span>
+              <span class="sp sp-ns">Not Started</span>
+              <div class="chip chip-violet" style="font-size:11px;"><div class="chip-av">MR</div>Mark R.</div>
+            </div>
+          </div>
+          <div class="sec-row-actions">
+            <span class="sec-row-ts">—</span>
+            <button class="btn btn-ghost btn-xs" disabled style="opacity:.35;cursor:default;">No response</button>
+            <button class="btn btn-ghost btn-xs" onclick="openModal('modal-edit-section')">Edit</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 5 -->
+      <div class="sec-row">
+        <div class="sec-row-main">
+          <div>
+            <div class="sec-row-title">Stakeholder Contacts</div>
+            <div class="sec-row-meta">
+              <span class="opt-tag">Optional</span>
+              <span class="sp sp-done">Complete</span>
+              <div class="chip chip-blue" style="font-size:11px;"><div class="chip-av">SH</div>Sarah H.</div>
+            </div>
+          </div>
+          <div class="sec-row-actions">
+            <span class="sec-row-ts">Feb 25, 4:30 PM</span>
+            <button class="btn btn-ghost btn-xs" onclick="toggleResp('rp5',this)">Show response</button>
+            <button class="btn btn-ghost btn-xs" onclick="openModal('modal-edit-section')">Edit</button>
+          </div>
+        </div>
+        <div class="resp-panel" id="rp5">
+          <div class="resp-header"><span class="resp-label">Client response</span><button class="resp-copy-btn" onclick="copyResp(this,'rt5')">Copy</button></div>
+          <div class="resp-block" id="rt5">Board chair: Linda Park — linda@riverside.gov — (503) 555-0191
+Facilities director: Tom Wilson — twilson@riverside.gov — (503) 555-0204</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="incomplete-card">
+      <h3>Incomplete Required Sections</h3>
+      <div class="incomplete-item"><span style="color:var(--warn);font-size:14px;line-height:1;margin-top:1px;">○</span><div>Program Requirements <span style="color:var(--text-muted);">— in progress, not yet confirmed</span><div class="inc-assignees">Assigned to: Sarah H., Mark R.</div></div></div>
+      <div class="incomplete-item"><span style="color:var(--warn);font-size:14px;line-height:1;margin-top:1px;">○</span><div>Project Schedule &amp; Milestones <span style="color:var(--text-muted);">— not started</span><div class="inc-assignees">Assigned to: Mark R.</div></div></div>
+    </div>
+
+    <!-- Email History -->
+    <div class="email-history">
+      <div class="email-history-header">
+        <div class="email-history-title">Follow-up Emails</div>
+        <span class="email-history-count">4 sent</span>
+      </div>
+      <div class="email-log">
+        <div class="email-log-row">
+          <div class="email-log-left">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
+              <span class="email-log-subject">Urgent reminder — 3 days remaining</span>
+              <span class="email-log-type email-log-type-urgent">Urgent</span>
+            </div>
+            <div class="email-log-recipients">Sarah H., Mark R.</div>
+          </div>
+          <div class="email-log-ts">Feb 27, 9:02 AM</div>
+        </div>
+        <div class="email-log-row">
+          <div class="email-log-left">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
+              <span class="email-log-subject">Standard reminder</span>
+              <span class="email-log-type email-log-type-standard">Standard</span>
+            </div>
+            <div class="email-log-recipients">Sarah H., Mark R.</div>
+          </div>
+          <div class="email-log-ts">Feb 25, 9:01 AM</div>
+        </div>
+        <div class="email-log-row">
+          <div class="email-log-left">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
+              <span class="email-log-subject">Standard reminder</span>
+              <span class="email-log-type email-log-type-standard">Standard</span>
+            </div>
+            <div class="email-log-recipients">Mark R.</div>
+          </div>
+          <div class="email-log-ts">Feb 23, 9:00 AM</div>
+        </div>
+        <div class="email-log-row">
+          <div class="email-log-left">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap;">
+              <span class="email-log-subject">Initial request sent</span>
+              <span class="email-log-type email-log-type-initial">Initial</span>
+            </div>
+            <div class="email-log-recipients">Sarah H., Mark R.</div>
+          </div>
+          <div class="email-log-ts">Feb 20, 10:15 AM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     CLIENT VIEW
+═══════════════════════════════════════ -->
+<div id="view-client" class="view">
+  <div class="client-header">
+    <div class="client-header-inner">
+      <div class="client-tagline">Proposal Input Request</div>
+      <div class="client-project-name">Riverside Community Center</div>
+      <div class="progress-wrap">
+        <div class="progress-meta"><span>2 of 4 required sections confirmed complete</span><strong>50%</strong></div>
+        <div class="progress-track"><div class="progress-fill" id="client-progress" style="width:50%"></div></div>
+      </div>
+      <div class="client-dates">
+        <div class="client-date-group">
+          <span class="client-date-label">Info needed by</span>
+          <span class="client-date-value">March 2, 2025</span>
+          <span class="badge badge-at-risk" style="font-size:10px;"><span class="badge-dot"></span>3 days left</span>
+        </div>
+        <span class="client-date-sep">·</span>
+        <span class="client-date-secondary">Proposal due March 28, 2025</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="client-body">
+    <div class="client-tabs">
+      <button class="client-tab active" id="ctab-form" onclick="switchClientTab('form')">Proposal Sections</button>
+      <button class="client-tab" id="ctab-all" onclick="switchClientTab('all')">All Responses</button>
+    </div>
+
+    <!-- PROPOSAL SECTIONS -->
+    <div id="cpanel-form">
+
+      <div class="cs-card cs-done" id="cs1">
+        <div class="cs-header" onclick="toggleCS('cs1')">
+          <div class="cs-header-left">
+            <span class="cs-title">Project Overview &amp; Goals</span>
+            <span class="sp sp-done">✓ Complete</span>
+            <div class="chip chip-blue" style="font-size:11px;"><div class="chip-av">SH</div>Sarah H.</div>
+          </div>
+          <svg class="cs-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 5l5 4 5-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div id="cs1-sum">
+          <div class="cs-summary">
+            <div class="cs-summary-text">The Riverside Community Center will serve as a multi-generational hub for the East Riverside neighborhood. The facility should accommodate a range of activities…</div>
+            <button class="cs-summary-edit" onclick="expandCS('cs1',event)"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M9 1.5L10.5 3 4.5 9H3V7.5L9 1.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>Edit response</button>
+          </div>
+        </div>
+        <div class="cs-body collapsed" id="cs1-body">
+          <div><div class="cs-inst-label">Instructions</div><div class="cs-inst-text">Describe the project's primary purpose, the community needs it addresses, and what a successful outcome looks like.</div></div>
+          <div><div class="cs-assign-label">Assigned to</div><div class="chip chip-blue"><div class="chip-av">SH</div>Sarah Holloway</div></div>
+          <textarea class="cs-textarea" id="ta1" oninput="handleIn('cs1','ta1','cc1',800)">The Riverside Community Center will serve as a multi-generational hub for the East Riverside neighborhood. The facility should accommodate a range of activities including fitness classes, youth programs, senior services, and community events. Key goals include ADA accessibility throughout, natural light in major activity spaces, and a design that reflects the neighborhood's diverse cultural heritage.
+
+The existing site is approximately 1.8 acres and sits adjacent to Riverside Park. We would like to retain the existing mature oak trees on the north boundary if possible.</textarea>
+          <div class="char-count" id="cc1">487 / 800</div>
+          <div class="action-row">
+            <button class="complete-pill done" id="cp1" onclick="toggleDone('cs1','cp1','ta1')"><span class="c-icon"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5 6.5-7" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Complete</button>
+            <label class="attach-pill" id="ap1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l8.57-8.57A4 4 0 0118 8.84l-8.59 8.57a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Attach files<input type="file" multiple onchange="handleFiles(this,'fl1','ap1')"></label>
+          </div>
+          <div class="file-list" id="fl1"></div>
+          <div class="cs-notes-section">
+            <div class="cs-notes-label" id="notes-label-1">Notes for freelancer</div>
+            <div class="cs-notes-hint">Optional — only visible to your proposal team</div>
+            <textarea class="cs-notes-input" placeholder="Questions, context, or anything worth flagging…"></textarea>
+          </div>
+          <div class="autosave"><div class="autosave-dot"></div>Saved just now</div>
+        </div>
+      </div>
+
+      <div class="cs-card" id="cs2">
+        <div class="cs-header" onclick="toggleCS('cs2')">
+          <div class="cs-header-left">
+            <span class="cs-title">Program Requirements</span>
+            <span class="req-tag">Required</span>
+            <span class="sp sp-ip" id="pill2">In Progress</span>
+            <div class="chip chip-blue" style="font-size:11px;"><div class="chip-av">SH</div>Sarah H.</div>
+            <div class="chip chip-violet" style="font-size:11px;"><div class="chip-av">MR</div>Mark R.</div>
+          </div>
+          <svg class="cs-chevron open" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 5l5 4 5-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div id="cs2-sum" style="display:none;"></div>
+        <div class="cs-body" id="cs2-body">
+          <div><div class="cs-inst-label">Instructions</div><div class="cs-inst-text">List all spaces required in the facility, their approximate sizes if known, and any special requirements.</div></div>
+          <div><div class="cs-assign-label">Assigned to</div><div class="chips"><div class="chip chip-blue"><div class="chip-av">SH</div>Sarah Holloway</div><div class="chip chip-violet"><div class="chip-av">MR</div>Mark Reeves</div></div></div>
+          <textarea class="cs-textarea" id="ta2" oninput="handleIn('cs2','ta2','cc2',1000)">Must have:
+— Main gymnasium / activity hall (min 6,000 SF)
+— Commercial kitchen
+— 3–4 meeting rooms (200–400 SF each)
+
+Nice to have:</textarea>
+          <div class="char-count" id="cc2">175 / 1000</div>
+          <div class="action-row">
+            <button class="complete-pill" id="cp2" onclick="toggleDone('cs2','cp2','ta2')"><span class="c-icon"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5 6.5-7" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Complete</button>
+            <label class="attach-pill" id="ap2"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l8.57-8.57A4 4 0 0118 8.84l-8.59 8.57a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Attach files<input type="file" multiple onchange="handleFiles(this,'fl2','ap2')"></label>
+          </div>
+          <div class="file-list" id="fl2"></div>
+          <div class="cs-notes-section">
+            <div class="cs-notes-label" id="notes-label-2">Notes for freelancer</div>
+            <div class="cs-notes-hint">Optional — only visible to your proposal team</div>
+            <textarea class="cs-notes-input">Not sure about the kitchen spec — will confirm with our chef consultant by end of week.</textarea>
+          </div>
+          <div class="autosave"><div class="autosave-dot"></div>Saved 1 hour ago</div>
+        </div>
+      </div>
+
+      <div class="cs-card" id="cs3">
+        <div class="cs-header" onclick="toggleCS('cs3')">
+          <div class="cs-header-left">
+            <span class="cs-title">Project Schedule &amp; Milestones</span>
+            <span class="req-tag">Required</span>
+            <span class="sp sp-ns" id="pill3">Not Started</span>
+            <div class="chip chip-violet" style="font-size:11px;"><div class="chip-av">MR</div>Mark R.</div>
+          </div>
+          <svg class="cs-chevron open" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 5l5 4 5-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div id="cs3-sum" style="display:none;"></div>
+        <div class="cs-body" id="cs3-body">
+          <div><div class="cs-inst-label">Instructions</div><div class="cs-inst-text">Describe the desired project timeline including any hard deadlines — funding expiration, board approvals, grand opening targets.</div></div>
+          <div><div class="cs-assign-label">Assigned to</div><div class="chip chip-violet"><div class="chip-av">MR</div>Mark Reeves</div></div>
+          <textarea class="cs-textarea" id="ta3" placeholder="Begin typing your response here…" oninput="handleIn('cs3','ta3','cc3',600)"></textarea>
+          <div class="char-count" id="cc3">0 / 600</div>
+          <div class="action-row">
+            <button class="complete-pill" id="cp3" onclick="toggleDone('cs3','cp3','ta3')"><span class="c-icon"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5 6.5-7" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Complete</button>
+            <label class="attach-pill" id="ap3"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l8.57-8.57A4 4 0 0118 8.84l-8.59 8.57a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Attach files<input type="file" multiple onchange="handleFiles(this,'fl3','ap3')"></label>
+          </div>
+          <div class="file-list" id="fl3"></div>
+          <div class="cs-notes-section">
+            <div class="cs-notes-label" id="notes-label-3">Notes for freelancer</div>
+            <div class="cs-notes-hint">Optional — only visible to your proposal team</div>
+            <textarea class="cs-notes-input" placeholder="Questions, context, or anything worth flagging…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="cs-card cs-done" id="cs4">
+        <div class="cs-header" onclick="toggleCS('cs4')">
+          <div class="cs-header-left">
+            <span class="cs-title">Stakeholder Contacts</span>
+            <span class="opt-tag">Optional</span>
+            <span class="sp sp-done">✓ Complete</span>
+            <div class="chip chip-blue" style="font-size:11px;"><div class="chip-av">SH</div>Sarah H.</div>
+          </div>
+          <svg class="cs-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 5l5 4 5-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div id="cs4-sum">
+          <div class="cs-summary">
+            <div class="cs-summary-text">Board chair: Linda Park — linda@riverside.gov — (503) 555-0191</div>
+            <button class="cs-summary-edit" onclick="expandCS('cs4',event)"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M9 1.5L10.5 3 4.5 9H3V7.5L9 1.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>Edit response</button>
+          </div>
+        </div>
+        <div class="cs-body collapsed" id="cs4-body">
+          <div><div class="cs-inst-label">Instructions</div><div class="cs-inst-text">Provide contact information for key stakeholders we may need to coordinate with during the proposal phase.</div></div>
+          <div><div class="cs-assign-label">Assigned to</div><div class="chip chip-blue"><div class="chip-av">SH</div>Sarah Holloway</div></div>
+          <textarea class="cs-textarea" id="ta4" oninput="handleIn('cs4','ta4','cc4',500)">Board chair: Linda Park — linda@riverside.gov — (503) 555-0191</textarea>
+          <div class="char-count" id="cc4">57 / 500</div>
+          <div class="action-row">
+            <button class="complete-pill done" id="cp4" onclick="toggleDone('cs4','cp4','ta4')"><span class="c-icon"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5 6.5-7" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Complete</button>
+            <label class="attach-pill" id="ap4"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l8.57-8.57A4 4 0 0118 8.84l-8.59 8.57a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Attach files<input type="file" multiple onchange="handleFiles(this,'fl4','ap4')"></label>
+          </div>
+          <div class="file-list" id="fl4"></div>
+          <div class="autosave"><div class="autosave-dot"></div>Saved 2 hours ago</div>
+        </div>
+      </div>
+
+    </div><!-- /cpanel-form -->
+
+    <!-- ALL RESPONSES — v7: full text, no clipping, Edit → button -->
+    <div id="cpanel-all" style="display:none;">
+
+      <div class="agg-section">
+        <div class="agg-header">
+          <div class="agg-header-left">
+            <span style="font-family:'Lora',serif;font-size:15px;font-weight:400;">Project Overview &amp; Goals</span>
+            <span class="sp sp-done">✓ Complete</span>
+          </div>
+          <button class="btn btn-ghost btn-xs" onclick="jumpToSection('cs1')">Edit →</button>
+        </div>
+        <div class="agg-body">
+          <div class="agg-label">Response</div>
+          <div class="agg-value">The Riverside Community Center will serve as a multi-generational hub for the East Riverside neighborhood. The facility should accommodate a range of activities including fitness classes, youth programs, senior services, and community events. Key goals include ADA accessibility throughout, natural light in major activity spaces, and a design that reflects the neighborhood's diverse cultural heritage.
+
+The existing site is approximately 1.8 acres and sits adjacent to Riverside Park. We would like to retain the existing mature oak trees on the north boundary if possible.</div>
+        </div>
+      </div>
+
+      <div class="agg-section">
+        <div class="agg-header">
+          <div class="agg-header-left">
+            <span style="font-family:'Lora',serif;font-size:15px;font-weight:400;">Program Requirements</span>
+            <span class="sp sp-ip">In Progress</span>
+          </div>
+          <button class="btn btn-ghost btn-xs" onclick="jumpToSection('cs2')">Edit →</button>
+        </div>
+        <div class="agg-body">
+          <div class="agg-label">Response (partial)</div>
+          <div class="agg-value">Must have:
+— Main gymnasium / activity hall (min 6,000 SF)
+— Commercial kitchen
+— 3–4 meeting rooms (200–400 SF each)
+
+Nice to have:</div>
+        </div>
+      </div>
+
+      <div class="agg-section">
+        <div class="agg-header">
+          <div class="agg-header-left">
+            <span style="font-family:'Lora',serif;font-size:15px;font-weight:400;">Project Schedule &amp; Milestones</span>
+            <span class="sp sp-ns">Not Started</span>
+          </div>
+          <button class="btn btn-ghost btn-xs" onclick="jumpToSection('cs3')">Edit →</button>
+        </div>
+        <div class="agg-body"><div class="agg-empty">No response yet.</div></div>
+      </div>
+
+      <div class="agg-section">
+        <div class="agg-header">
+          <div class="agg-header-left">
+            <span style="font-family:'Lora',serif;font-size:15px;font-weight:400;">Stakeholder Contacts</span>
+            <span class="sp sp-done">✓ Complete</span>
+          </div>
+          <button class="btn btn-ghost btn-xs" onclick="jumpToSection('cs4')">Edit →</button>
+        </div>
+        <div class="agg-body">
+          <div class="agg-label">Response</div>
+          <div class="agg-value">Board chair: Linda Park — linda@riverside.gov — (503) 555-0191</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ MODALS ═══════════ -->
+
+<!-- NEW PROJECT -->
+<div id="modal-new-project" class="modal-overlay" style="display:none;" onclick="closeModalOutside(event,'modal-new-project')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">New Project</div>
+      <button class="btn-icon" onclick="closeModal('modal-new-project')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="modal-scroll">
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Project Name</label><input class="form-input" type="text" placeholder="e.g. Riverside Community Center"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Info Needed By</label><input class="form-input" type="date"><div class="form-hint">Drives reminders &amp; status</div></div>
+          <div class="form-group"><label class="form-label">Proposal Due Date</label><input class="form-input" type="date"></div>
+        </div>
+        <!-- v7: free-form reminder frequency -->
+        <div class="form-group">
+          <label class="form-label">Reminder Frequency</label>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:13px;color:var(--text-secondary);white-space:nowrap;">Every</span>
+            <input class="form-input" type="number" min="1" max="365" value="2" style="width:80px;text-align:center;">
+            <span style="font-size:13px;color:var(--text-secondary);white-space:nowrap;">days</span>
+          </div>
+          <div class="form-hint">Enter any number — e.g. 9 for every 9 days</div>
+        </div>
+        <span class="modal-section-label">Contacts</span>
+        <div id="new-contacts-list" style="display:flex;flex-direction:column;gap:14px;margin-bottom:10px;">
+          <div class="contact-entry">
+            <div class="form-row" style="margin-bottom:6px;">
+              <input class="form-input" type="text" placeholder="Full name">
+              <input class="form-input" type="email" placeholder="Email address">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">Chip Color</span>
+              <div class="color-picker-row">
+                <div class="color-swatch color-swatch-blue selected" data-color="blue" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-violet" data-color="violet" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-amber" data-color="amber" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-teal" data-color="teal" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-rose" data-color="rose" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-sand" data-color="sand" onclick="selectColor(this)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="addContactRow()" style="margin-bottom:8px;">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Add another contact
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-new-project')">Cancel</button>
+      <button class="btn btn-primary" onclick="notify('Project created — client link ready');closeModal('modal-new-project')">Create Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PROJECT -->
+<div id="modal-edit-project" class="modal-overlay" style="display:none;" onclick="closeModalOutside(event,'modal-edit-project')">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">Edit Project</div>
+      <button class="btn-icon" onclick="closeModal('modal-edit-project')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="modal-scroll">
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Project Name</label><input class="form-input" type="text" value="Riverside Community Center"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Info Needed By</label><input class="form-input" type="date" value="2025-03-02"></div>
+          <div class="form-group"><label class="form-label">Proposal Due Date</label><input class="form-input" type="date" value="2025-03-28"></div>
+        </div>
+        <!-- v7: free-form frequency -->
+        <div class="form-group">
+          <label class="form-label">Reminder Frequency</label>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:13px;color:var(--text-secondary);white-space:nowrap;">Every</span>
+            <input class="form-input" type="number" min="1" max="365" value="2" style="width:80px;text-align:center;">
+            <span style="font-size:13px;color:var(--text-secondary);white-space:nowrap;">days</span>
+          </div>
+          <div class="form-hint">Enter any number — e.g. 9 for every 9 days</div>
+        </div>
+        <span class="modal-section-label">Contacts</span>
+        <div id="edit-contacts-list" style="display:flex;flex-direction:column;gap:14px;margin-bottom:10px;">
+          <div class="contact-entry">
+            <div class="form-row" style="align-items:center;margin-bottom:6px;">
+              <input class="form-input" type="text" value="Sarah Holloway">
+              <input class="form-input" type="email" value="sarah@clientco.com">
+              <button class="btn btn-danger btn-xs" style="width:auto;flex-shrink:0;" onclick="this.closest('.contact-entry').remove()">Remove</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">Chip Color</span>
+              <div class="color-picker-row">
+                <div class="color-swatch color-swatch-blue selected" data-color="blue" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-violet" data-color="violet" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-amber" data-color="amber" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-teal" data-color="teal" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-rose" data-color="rose" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-sand" data-color="sand" onclick="selectColor(this)"></div>
+              </div>
+            </div>
+          </div>
+          <div class="contact-entry">
+            <div class="form-row" style="align-items:center;margin-bottom:6px;">
+              <input class="form-input" type="text" value="Mark Reeves">
+              <input class="form-input" type="email" value="mark@clientco.com">
+              <button class="btn btn-danger btn-xs" style="width:auto;flex-shrink:0;" onclick="this.closest('.contact-entry').remove()">Remove</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">Chip Color</span>
+              <div class="color-picker-row">
+                <div class="color-swatch color-swatch-blue" data-color="blue" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-violet selected" data-color="violet" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-amber" data-color="amber" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-teal" data-color="teal" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-rose" data-color="rose" onclick="selectColor(this)"></div>
+                <div class="color-swatch color-swatch-sand" data-color="sand" onclick="selectColor(this)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="addEditContactRow()" style="margin-bottom:8px;">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Add contact
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-project')">Cancel</button>
+      <button class="btn btn-primary" onclick="notify('Project updated');closeModal('modal-edit-project')">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SECTION -->
+<div id="modal-add-section" class="modal-overlay" style="display:none;" onclick="closeModalOutside(event,'modal-add-section')">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Add Section</div><button class="btn-icon" onclick="closeModal('modal-add-section')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+    <div class="modal-scroll"><div class="modal-body">
+      <div class="form-group"><label class="form-label">Section Title</label><input class="form-input" type="text" placeholder="e.g. Site Constraints &amp; Conditions"></div>
+      <div class="form-group"><label class="form-label">Instructions</label><textarea class="form-textarea" style="min-height:80px;" placeholder="Describe what you need from the client…"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Character Limit</label><input class="form-input" type="number" value="800"></div>
+        <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:20px;"><label class="toggle-wrap"><button class="toggle on" onclick="this.classList.toggle('on')"></button><span class="toggle-label">Required</span></label></div>
+      </div>
+      <div class="form-group"><label class="form-label">Assign to Contacts</label>
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-secondary);"><input type="checkbox" checked style="accent-color:var(--accent);width:15px;height:15px;"><div class="chip chip-blue"><div class="chip-av">SH</div>Sarah Holloway</div></label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-secondary);"><input type="checkbox" style="accent-color:var(--accent);width:15px;height:15px;"><div class="chip chip-violet"><div class="chip-av">MR</div>Mark Reeves</div></label>
+        </div>
+      </div>
+    </div></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-section')">Cancel</button>
+      <button class="btn btn-primary" onclick="notify('Section added');closeModal('modal-add-section')">Add Section</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT SECTION -->
+<div id="modal-edit-section" class="modal-overlay" style="display:none;" onclick="closeModalOutside(event,'modal-edit-section')">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Edit Section</div><button class="btn-icon" onclick="closeModal('modal-edit-section')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+    <div class="modal-scroll"><div class="modal-body">
+      <div class="form-group"><label class="form-label">Section Title</label><input class="form-input" type="text" value="Project Overview &amp; Goals"></div>
+      <div class="form-group"><label class="form-label">Instructions</label><textarea class="form-textarea" style="min-height:80px;">Describe the project's primary purpose, the community needs it addresses, and what a successful outcome looks like.</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Character Limit</label><input class="form-input" type="number" value="800"></div>
+        <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:20px;"><label class="toggle-wrap"><button class="toggle on" onclick="this.classList.toggle('on')"></button><span class="toggle-label">Required</span></label></div>
+      </div>
+      <div class="form-group"><label class="form-label">Assign to Contacts</label>
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-secondary);"><input type="checkbox" checked style="accent-color:var(--accent);width:15px;height:15px;"><div class="chip chip-blue"><div class="chip-av">SH</div>Sarah Holloway</div></label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text-secondary);"><input type="checkbox" style="accent-color:var(--accent);width:15px;height:15px;"><div class="chip chip-violet"><div class="chip-av">MR</div>Mark Reeves</div></label>
+        </div>
+      </div>
+    </div></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" style="margin-right:auto;" onclick="closeModal('modal-edit-section')">Delete section</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-section')">Cancel</button>
+      <button class="btn btn-primary" onclick="notify('Section updated');closeModal('modal-edit-section')">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT DRAFT -->
+<div id="modal-edit-draft" class="modal-overlay" style="display:none;" onclick="closeModalOutside(event,'modal-edit-draft')">
+  <div class="modal modal-lg">
+    <div class="modal-header"><div class="modal-title">Edit Reminder Email</div><button class="btn-icon" onclick="closeModal('modal-edit-draft')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+    <div class="modal-scroll"><div class="modal-body">
+      <div class="form-group"><label class="form-label">Subject Line</label><input class="form-input" type="text" value="Proposal inputs needed — Riverside Community Center"></div>
+      <div class="form-group"><label class="form-label">Email Body</label><textarea class="form-textarea" style="min-height:220px;font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.75;">Hello,
+
+We're still waiting on a few inputs for the Riverside Community Center proposal, due March 2nd.
+
+Outstanding sections:
+— Program Requirements (Sarah, Mark)
+— Project Schedule &amp; Milestones (Mark)
+
+Please follow the link below to complete your inputs:
+https://app.pit.com/client/abc123
+
+Thank you,
+Brad</textarea></div>
+    </div></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-draft')">Cancel</button>
+      <button class="btn btn-primary" onclick="notify('Draft saved');closeModal('modal-edit-draft')">Save Draft</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+let adminName = 'Brad';
+
+function progressColor(pct) {
+  if (pct >= 100) return '#2d5a3d';
+  if (pct === 0)  return '#7a1a1a';
+  if (pct < 50) {
+    const t = pct / 50;
+    return `rgb(${Math.round(122+(181-122)*t)},${Math.round(26+(136-26)*t)},${Math.round(26+(58-26)*t)})`;
+  }
+  const t = (pct - 50) / 50;
+  return `rgb(${Math.round(181+(45-181)*t)},${Math.round(136+(90-136)*t)},${Math.round(58+(61-58)*t)})`;
+}
+function setProgress(el, pct) {
+  if (!el) return;
+  el.style.width = pct + '%';
+  el.style.backgroundColor = progressColor(pct);
+}
+
+function finishOnboard() {
+  const name = document.getElementById('onboard-name').value.trim() || 'Your';
+  adminName = name;
+  document.getElementById('nav-name').textContent = name;
+  const av = document.getElementById('nav-avatar');
+  if (av) av.textContent = name.slice(0,2).toUpperCase();
+  document.getElementById('dash-title').textContent = name + '\u2019s Projects';
+  document.querySelectorAll('[id^="notes-label-"]').forEach(el => el.textContent = 'Notes for ' + name);
+  const nfl = document.getElementById('notes-freelancer-label');
+  if (nfl) nfl.textContent = 'Note for ' + name;
+  document.getElementById('onboard').style.display = 'none';
+  document.getElementById('main-nav').style.display = 'flex';
+  showView('admin-list');
+}
+document.getElementById('onboard-name').addEventListener('keydown', e => { if (e.key === 'Enter') finishOnboard(); });
+
+function switchNav(mode) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('nav-' + mode).classList.add('active');
+  showView(mode === 'client' ? 'client' : 'admin-list');
+}
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById('view-' + id);
+  if (el) el.classList.add('active');
+  window.scrollTo(0, 0);
+  if (id === 'admin-list') {
+    setProgress(document.getElementById('pc1'), 60);
+    setProgress(document.getElementById('pc2'), 100);
+    setProgress(document.getElementById('pc3'), 30);
+  }
+  if (id === 'admin-detail') setProgress(document.getElementById('detail-progress'), 60);
+  if (id === 'client') setProgress(document.getElementById('client-progress'), 50);
+}
+
+function switchPageTab(id) {
+  ['tab-projects','tab-drafts'].forEach(t => document.getElementById(t).classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('panel-projects').style.display = id === 'tab-projects' ? '' : 'none';
+  document.getElementById('panel-drafts').style.display   = id === 'tab-drafts'   ? '' : 'none';
+}
+
+function switchClientTab(mode) {
+  ['form','all'].forEach(m => {
+    document.getElementById('ctab-' + m).classList.toggle('active', m === mode);
+    document.getElementById('cpanel-' + m).style.display = m === mode ? '' : 'none';
+  });
+}
+
+function jumpToSection(csId) {
+  switchClientTab('form');
+  setTimeout(() => {
+    const card = document.getElementById(csId);
+    if (!card) return;
+    const body = document.getElementById(csId + '-body');
+    const sum  = document.getElementById(csId + '-sum');
+    const chev = card.querySelector('.cs-chevron');
+    if (body && body.classList.contains('collapsed')) {
+      body.classList.remove('collapsed');
+      if (sum) sum.style.display = 'none';
+      if (chev) chev.classList.add('open');
+    }
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 60);
+}
+
+// Contact picker
+let activePicker = null;
+function openPicker(e, pickerId) {
+  e.stopPropagation();
+  const btn = e.currentTarget;
+  const picker = document.getElementById(pickerId);
+  if (activePicker && activePicker !== picker) activePicker.classList.remove('open');
+  if (picker.classList.contains('open')) { picker.classList.remove('open'); activePicker = null; return; }
+  const rect = btn.getBoundingClientRect();
+  const pickerW = 230;
+  let left = rect.left;
+  let top  = rect.bottom + 6;
+  if (top + 160 > window.innerHeight) top = rect.top - 6 - 140;
+  if (left + pickerW > window.innerWidth - 12) left = window.innerWidth - pickerW - 12;
+  picker.style.top  = top + 'px';
+  picker.style.left = left + 'px';
+  picker.classList.add('open');
+  activePicker = picker;
+}
+document.addEventListener('click', e => {
+  if (activePicker && !e.target.closest('.contact-picker-dropdown') && !e.target.closest('.add-contact-btn')) {
+    activePicker.classList.remove('open'); activePicker = null;
+  }
+});
+function addContactToDraft(recipientsId, initials, name, colorClass, pickerItem) {
+  const container = document.getElementById(recipientsId);
+  if (!container) return;
+  if (Array.from(container.querySelectorAll('.chip')).some(c => c.textContent.includes(initials))) {
+    notify(name + ' already added'); return;
+  }
+  const chip = document.createElement('div');
+  chip.className = 'chip chip-' + colorClass;
+  chip.style.paddingRight = '6px';
+  chip.innerHTML = `<div class="chip-av">${initials}</div>${name.split(' ')[0]}<button class="btn-icon" style="padding:2px;margin-left:2px;" onclick="removeChip(this)"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>`;
+  const addBtn = container.querySelector('.add-contact-btn');
+  container.insertBefore(chip, addBtn);
+  pickerItem.style.opacity = '0.4';
+  pickerItem.style.pointerEvents = 'none';
+  if (activePicker) { activePicker.classList.remove('open'); activePicker = null; }
+  notify(name + ' added');
+}
+
+function toggleResp(id, btn) {
+  const panel = document.getElementById(id);
+  const open = panel.classList.toggle('open');
+  btn.textContent = open ? 'Hide response' : 'Show response';
+}
+function copyResp(btn, textId) {
+  const el = document.getElementById(textId);
+  if (!el) return;
+  const text = el.innerText.trim();
+  const done = () => { btn.textContent = 'Copied ✓'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2400); };
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(done).catch(done);
+  else done();
+}
+
+function toggleCS(id) {
+  const card = document.getElementById(id);
+  const body = document.getElementById(id + '-body');
+  const sum  = document.getElementById(id + '-sum');
+  const chev = card.querySelector('.cs-chevron');
+  if (body.classList.contains('collapsed')) {
+    body.classList.remove('collapsed');
+    if (sum) sum.style.display = 'none';
+    if (chev) chev.classList.add('open');
+  } else {
+    body.classList.add('collapsed');
+    if (sum) sum.style.display = '';
+    if (chev) chev.classList.remove('open');
+  }
+}
+function expandCS(id, e) {
+  if (e) e.stopPropagation();
+  const card = document.getElementById(id);
+  const body = document.getElementById(id + '-body');
+  const sum  = document.getElementById(id + '-sum');
+  const chev = card.querySelector('.cs-chevron');
+  body.classList.remove('collapsed');
+  if (sum) sum.style.display = 'none';
+  if (chev) chev.classList.add('open');
+}
+
+function toggleDone(cardId, pillId, taId) {
+  const pill = document.getElementById(pillId);
+  const card = document.getElementById(cardId);
+  const ta   = document.getElementById(taId);
+  if (pill.classList.contains('done')) {
+    pill.classList.remove('done'); card.classList.remove('cs-done');
+    updateHeaderPill(card, ta); expandCS(cardId);
+  } else {
+    pill.classList.add('done'); card.classList.add('cs-done');
+    const hp = card.querySelector('.cs-header .sp');
+    if (hp) { hp.className = 'sp sp-done'; hp.textContent = '✓ Complete'; }
+    notify('Section marked complete');
+    setTimeout(() => {
+      const body = document.getElementById(cardId + '-body');
+      const sum  = document.getElementById(cardId + '-sum');
+      const chev = card.querySelector('.cs-chevron');
+      if (body && !body.classList.contains('collapsed')) {
+        body.classList.add('collapsed');
+        if (sum) sum.style.display = '';
+        if (chev) chev.classList.remove('open');
+      }
+    }, 480);
+  }
+}
+function updateHeaderPill(card, ta) {
+  const hp = card.querySelector('.cs-header .sp');
+  if (!hp) return;
+  const has = ta && ta.value.trim().length > 0;
+  hp.className = has ? 'sp sp-ip' : 'sp sp-ns';
+  hp.textContent = has ? 'In Progress' : 'Not Started';
+}
+function handleIn(cardId, taId, ccId, limit) {
+  const ta = document.getElementById(taId);
+  const cc = document.getElementById(ccId);
+  if (!ta || !cc) return;
+  const pill = document.querySelector('#' + cardId + ' .complete-pill');
+  const card = document.getElementById(cardId);
+  if (pill && pill.classList.contains('done')) { pill.classList.remove('done'); card.classList.remove('cs-done'); }
+  updateHeaderPill(card, ta);
+  const len = ta.value.length;
+  if (len > limit) ta.value = ta.value.substring(0, limit);
+  cc.textContent = Math.min(len, limit) + ' / ' + limit;
+  cc.classList.toggle('over', len >= limit * 0.97);
+}
+
+function handleFiles(input, listId, pillId) {
+  const list = document.getElementById(listId);
+  const pill = document.getElementById(pillId);
+  if (!input.files || !input.files.length) return;
+  Array.from(input.files).forEach(file => {
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    const name = file.name.length > 28 ? file.name.substring(0,26) + '…' : file.name;
+    item.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5"/><polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.5"/></svg>${name}<button class="file-remove" onclick="this.parentElement.remove();updateAttachPill('${listId}','${pillId}')"><svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>`;
+    list.appendChild(item);
+  });
+  pill.classList.add('has-files');
+  input.value = '';
+  notify(input.files.length > 1 ? input.files.length + ' files attached' : 'File attached');
+}
+function updateAttachPill(listId, pillId) {
+  const list = document.getElementById(listId);
+  const pill = document.getElementById(pillId);
+  if (list && pill && list.children.length === 0) pill.classList.remove('has-files');
+}
+
+function openModal(id) { document.getElementById(id).style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; document.body.style.overflow = ''; }
+function closeModalOutside(e, id) { if (e.target.id === id) closeModal(id); }
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); document.body.style.overflow = ''; }
+});
+
+function selectColor(swatch) {
+  const row = swatch.closest('.color-picker-row');
+  row.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  swatch.classList.add('selected');
+}
+
+function makeContactEntry() {
+  const entry = document.createElement('div');
+  entry.className = 'contact-entry';
+  entry.innerHTML = `
+    <div class="form-row" style="align-items:center;margin-bottom:6px;">
+      <input class="form-input" type="text" placeholder="Full name">
+      <input class="form-input" type="email" placeholder="Email address">
+      <button class="btn btn-danger btn-xs" style="width:auto;flex-shrink:0;" onclick="this.closest('.contact-entry').remove()">Remove</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);">Chip Color</span>
+      <div class="color-picker-row">
+        <div class="color-swatch color-swatch-blue selected" data-color="blue" onclick="selectColor(this)"></div>
+        <div class="color-swatch color-swatch-violet" data-color="violet" onclick="selectColor(this)"></div>
+        <div class="color-swatch color-swatch-amber" data-color="amber" onclick="selectColor(this)"></div>
+        <div class="color-swatch color-swatch-teal" data-color="teal" onclick="selectColor(this)"></div>
+        <div class="color-swatch color-swatch-rose" data-color="rose" onclick="selectColor(this)"></div>
+        <div class="color-swatch color-swatch-sand" data-color="sand" onclick="selectColor(this)"></div>
+      </div>
+    </div>`;
+  return entry;
+}
+function addContactRow() { document.getElementById('new-contacts-list').appendChild(makeContactEntry()); }
+function addEditContactRow() { document.getElementById('edit-contacts-list').appendChild(makeContactEntry()); }
+
+function approveDraft(btn) {
+  const card = btn.closest('.draft-card');
+  card.style.transition = 'opacity .3s,transform .3s';
+  card.style.opacity = '0'; card.style.transform = 'translateY(-6px)';
+  setTimeout(() => {
+    card.remove();
+    const b = document.getElementById('draft-count');
+    if (b) { const n = parseInt(b.textContent) - 1; n <= 0 ? b.remove() : (b.textContent = n); }
+  }, 300);
+  notify('Reminder sent');
+}
+function dismissDraft(btn) {
+  const card = btn.closest('.draft-card');
+  card.style.transition = 'opacity .25s'; card.style.opacity = '0.15';
+  setTimeout(() => {
+    card.remove();
+    const b = document.getElementById('draft-count');
+    if (b) { const n = parseInt(b.textContent) - 1; n <= 0 ? b.remove() : (b.textContent = n); }
+  }, 250);
+  notify('Draft dismissed');
+}
+function removeChip(btn) { btn.closest('.chip').remove(); }
+
+let toastT;
+function notify(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
